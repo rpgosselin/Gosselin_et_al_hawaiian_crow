@@ -4,9 +4,9 @@
 # Individual Behavior and Housing Setup Interact to Influence Markers of Welfare in the Critically Endangered Hawaiian Crow
 
 # R Script Authors:
-# Rachel Gosselin
-# Alison Flanagan
-# Alison Greggor
+# Rachel P. Gosselin
+# Alison M. Flanagan
+# Alison L. Greggor
 
 
 # Data vs Paper Notes:
@@ -28,6 +28,10 @@ library(lme4)
 library(MuMIn)
 library(formattable)
 library(arm)
+library(emmeans)
+library(ggplot2)
+library(gridExtra)
+library(viridis)
 
 # 3. Clustering Behaviors ----------------------------------------------------
 
@@ -918,12 +922,12 @@ for (j in 1:10000) {
   
   boldness_icc <- 
     data.frame(
-      "Alala"= (unique(icc.keeper.data$SCSB)), 
-      "Day.1"= NA,
-      "Day.2"= NA, 
-      "Day.3"= NA, 
-      "Day.4"=NA, 
-      "Day.5"=NA)  
+      "Alala" = (unique(icc.keeper.data$SCSB)), 
+      "Day.1" = NA,
+      "Day.2" = NA, 
+      "Day.3" = NA, 
+      "Day.4" = NA, 
+      "Day.5" = NA)  
   
   for(i in 1:length(unique(icc.keeper.data$SCSB))){
     bird <- unique(icc.keeper.data$SCSB)[i]
@@ -935,31 +939,31 @@ for (j in 1:10000) {
   keeperpvalues$Boldness <- 
     icc(
       boldness_icc[,c(2:6)], 
-      model=c("oneway"), 
-      type= c("consistency")
+      model = c("oneway"), 
+      type = c("consistency")
       )$p.value
   
   keeperfvalues$Boldness <- 
     icc(
       boldness_icc[,c(2:6)], 
-      model=c("oneway"), 
-      type= c("consistency")
+      model = c("oneway"), 
+      type = c("consistency")
       )$Fvalue
   
   
   ## Aggressive Vocs
   
   agg_vocs_icc <- data.frame(
-    "Alala"= (unique(icc.keeper.data$SCSB)), 
-    "Day.1"= NA,
-    "Day.2"= NA, 
-    "Day.3"= NA, 
-    "Day.4"=NA, 
-    "Day.5"=NA)  
+    "Alala" = (unique(icc.keeper.data$SCSB)), 
+    "Day.1" = NA,
+    "Day.2" = NA, 
+    "Day.3" = NA, 
+    "Day.4" = NA, 
+    "Day.5" = NA)  
   
   for(i in 1:length(unique(icc.keeper.data$SCSB))){
     bird <- unique(icc.keeper.data$SCSB)[i]
-    all_bird <- icc.keeper.data[which(icc.keeper.data$SCSB==bird),]
+    all_bird <- icc.keeper.data[which(icc.keeper.data$SCSB == bird),]
     all_agg_vocs <- all_bird$Agg.Voc.Per.Min
     agg_vocs_icc[i, 2:6] <- all_agg_vocs
   }
@@ -967,15 +971,15 @@ for (j in 1:10000) {
   keeperpvalues$AggVocs <-  
     icc(
       agg_vocs_icc[,c(2:6)], 
-      model=c("oneway"), 
-      type= c("consistency")
+      model = c("oneway"), 
+      type = c("consistency")
       )$p.value
   
   keeperfvalues$AggVocs <-  
     icc(
       agg_vocs_icc[,c(2:6)], 
-      model=c("oneway"), 
-      type= c("consistency")
+      model = c("oneway"), 
+      type = c("consistency")
       )$Fvalue
   
   
@@ -1134,7 +1138,7 @@ NonStress_Enclosure_GLMM <-
   as.data.frame(
     transform(
       NonStress_Enclosure_GLMM,
-      Trial_num=ave(
+      Trial_num = ave(
         seq_along(SCSB), 
         SCSB, 
         FUN = seq_along)))
@@ -1182,9 +1186,9 @@ GlobalModel <-
          Breeding + 
          Trial_num + 
          (1|SCSB), 
-       data=NonStress_Enclosure_GLMM, 
-       REML=FALSE, 
-       control=lmerControl(optimizer="bobyqa"),
+       data = NonStress_Enclosure_GLMM, 
+       REML = FALSE, 
+       control = lmerControl(optimizer = "bobyqa"),
        na.action = "na.fail")
 
 plot(GlobalModel) # Nicer residuals
@@ -1263,7 +1267,7 @@ m1.sel_subset_TABLE$formula
 
 ## Format
 m1.sel_subset_TABLE <- m1.sel_subset_TABLE %>%
-  mutate(formula=as.character(formula)) %>%
+  mutate(formula = as.character(formula)) %>%
   as.data.frame()
 
 m1.submodel_results <- m1.sel_subset_TABLE
@@ -1313,7 +1317,7 @@ merge1 <-
 
 merge1
 
-merge1$df=NULL
+merge1$df = NULL
 
 merge1$Level <- 
   c("Intercept", 
@@ -1330,7 +1334,7 @@ merge1$Level <-
     "Overcast",
     "Rain")
 
-merge1$Variable=NULL
+merge1$Variable = NULL
 
 merge1$"Parameter" <- NA
 
@@ -1353,18 +1357,18 @@ merge1
 
 
 # CI column
-merge1$CIa=NA
-merge1$CIb=NA
-merge1$CI=NA
+merge1$CIa = NA
+merge1$CIb = NA
+merge1$CI = NA
 merge1$CIa <- paste("(", merge1$`2.5 %`, ",", sep = "")
 merge1$`97.5 %` <- as.character(merge1$`97.5 %`)
-merge1$CIb <- paste(merge1$CIa, merge1$`97.5 %`, sep= " ")
-merge1$CI <- paste(merge1$CIb, ")", sep=  "")
+merge1$CIb <- paste(merge1$CIa, merge1$`97.5 %`, sep = " ")
+merge1$CI <- paste(merge1$CIb, ")", sep =  "")
 
-merge1$`2.5 %`=NULL
-merge1$`97.5 %`=NULL
-merge1$CIa =NULL
-merge1$CIb =NULL
+merge1$`2.5 %` = NULL
+merge1$`97.5 %` = NULL
+merge1$CIa = NULL
+merge1$CIb = NULL
 
 merge1
 
@@ -1397,10 +1401,77 @@ formattable(Table1)
 write_csv(Table1, "Positive Welfare Model Avg Results Table.csv")
 
 
-## 10.1 GLMM Plots ----------------------------------------------------
+## 10.1 Post Hoc analysis of Trial_num ------------------------------------
+
+# Unclear why Trial_num's RI = 1
+# Due to a confounding variable?
+# Or due to methodological error?
+# Or perhaps the crows acclimating to the observer over time?
+
+# Is the change in positive welfare linear (pointing to methodology)?
+
+# First we'll plot the predicted positive welfare rates
+
+# Create a new data frame with unique values of Trial_num and specific levels of other factors
+prediction_data <- data.frame(
+  Trial_num = factor(levels(NonStress_Enclosure_GLMM$Trial_num)),       # Unique levels of Trial_num
+  Banked.Not = factor(levels(NonStress_Enclosure_GLMM$Banked.Not)[1]),  # Reference level for factors
+  Weather = factor(levels(NonStress_Enclosure_GLMM$Weather)[1]),
+  Food = factor(levels(NonStress_Enclosure_GLMM$Food)[1]),
+  Sex = factor(levels(NonStress_Enclosure_GLMM$Sex)[1]),
+  Breeding = factor(levels(NonStress_Enclosure_GLMM$Breeding)[1]),
+  Time.Slots = factor(levels(NonStress_Enclosure_GLMM$Time.Slots)[1]),
+  SCSB = factor(levels(NonStress_Enclosure_GLMM$SCSB)[1])  # Random effect set to a reference level
+)
+
+# Generate predicted values for each Trial_num level
+prediction_data$predicted <- predict(GlobalModel, newdata = prediction_data, re.form = NA)
+
+# Plot the predicted values for Trial_num
+ggplot(prediction_data, aes(x = Trial_num, y = predicted)) +
+  geom_line(aes(group = 1)) +  # Connect points with a line
+  geom_point() +
+  labs(x = "Trial Number", y = "Predicted sqrtNonStress") +
+  theme_minimal()
+
+# It's not linear, and likely due to a confounding variable
+
+# Let's follow up this visual inspections with a pairwise analysis
+emmeans_results <- 
+  emmeans(GlobalModel, pairwise ~ Trial_num)
+
+pairwise_summary <- 
+  as.data.frame(
+    summary(emmeans_results))
+
+pairwise_summary_clean <- 
+  pairwise_summary[c(7:21), c(2,4,5,8:10)]
+
+formattable(pairwise_summary_clean)
+write_csv(pairwise_summary_clean, "Observation Order Post Hoc Pairwise Analysis Results Table.csv")
+
+# Significant pairwise contrasts for observation 1 vs 4,5,6
+# But non-significant contrasts between many adjacent trials (1 vs 2, 4 vs 5, etc.)
+
+# Increase in avg positive welfare rate is more noticeable in a broader sense 
+# (e.g., comparing 1 to 4,5,6) rather than between consecutive trials.
+
+# When looking at our confounding variables, we can see that rain follows a similar patter
+# Observations 1-3 had rain and 4-6 did not
+# Observation 1 had the most rain 
+# We've included a plot for the SI below (10.2.4)
+
+# Rain is the most likely culprit as to why Trial_num's RI = 1
+# This show how important capturing weather as a confounding variable is for our study
+
+# The variation of weather, particularly rain, has been accounted for in our model,
+# such that our other results (Breeding RI = 1) is even more reliable.
 
 
-### 10.1.1 Observation Order Box Plot --------------------------------------------------
+## 10.2 GLMM Plots ----------------------------------------------------
+
+
+### 10.2.1 Observation Order Box Plot --------------------------------------------------
 
 ggplot(
   NonStress_Enclosure_GLMM, 
@@ -1410,17 +1481,15 @@ ggplot(
   geom_boxplot() + 
   theme_light() +
   labs(
-    y = "Rate of Positive Welfare-Indicating Behavior (per min)", 
+    y = "Rate of Positive Welfare-Indicating Behavior (per bird, per min)", 
     x = "Observation") +
   theme(
     axis.title = element_text(size = 12), 
-    axis.text.x = element_text(size=10),
-    axis.text.y = element_text(size=10))
+    axis.text.x = element_text(size = 10),
+    axis.text.y = element_text(size = 10))
 
 
-
-
-### 10.1.2 Non-Stress & Breeding Box Plot -------------------------------------------
+### 10.2.2 Non-Stress & Breeding Box Plot -------------------------------------------
 
 # Change Category Names
 
@@ -1484,16 +1553,17 @@ ggplot(
   geom_boxplot() + 
   theme_bw() +
   labs(
-    y = "Rate of Positive Welfare-Indicating Behavior (per min)", 
+    y = "Rate of Positive Welfare-Indicating Behavior (per bird, per min, per observation)", 
     x = "Breeding Stage") +
   theme(
-    axis.title = element_text(size = 11), 
-    axis.text.x = element_text(size=10),
-    axis.text.y = element_text(size=10))
+    axis.title.x = element_text(size = 10), 
+    axis.text.x = element_text(size = 10),
+    axis.title.y = element_text(size = 9), 
+    axis.text.y = element_text(size = 10))
 
 
 
-### 10.1.3 Non-Stress Rates vs Housing Plot ----------------------------------------------
+### 10.2.3 Non-Stress Rates vs Housing Plot ----------------------------------------------
 
 # Housing is ~82%, worth consideration for longer studies
 # Higher welfare in banked, but could be because not incubating/chick rearing
@@ -1529,7 +1599,7 @@ NonStress_Enclosure_GLMM$Banked.Not <-
   as.factor(NonStress_Enclosure_GLMM$Banked.Not)
 
 
-## Plot
+# Plot
 
 ggplot(
   NonStress_Enclosure_GLMM, 
@@ -1538,12 +1608,85 @@ ggplot(
     NonStress.Rate)) +
   geom_boxplot() + 
   theme_bw() +
-  labs(y = "Positive Welfare Behavior Rate (per min)") + 
+  labs(y = "Positive Welfare Behavior Rate (per bird, per min, per observation)") + 
   theme(axis.title.x = element_blank()) +
   theme(
     axis.title = element_text(size = 12), 
-    axis.text.x = element_text(size=13),
-    axis.text.y = element_text(size=10))
+    axis.text.x = element_text(size = 13),
+    axis.text.y = element_text(size = 10)
+    )
+
+
+#### 10.2.3.1 Combined Plots ----------------------------------------------------------
+
+# Create combined plot Figure 1a and 1b due to same Y axis
+
+# Breeding Stage Plot
+plot1 <- ggplot(
+  NonStress_Enclosure_GLMM, 
+  aes(
+    Breeding, 
+    NonStress.Rate)) +
+  geom_boxplot() + 
+  ggtitle("a. Breeding Stage") + 
+  theme_bw() +
+  ylab("Rate of Positive Welfare-Indicating Behavior (per bird, per min, per observation)") + 
+  theme(
+    axis.title.y = element_text(size = 10), 
+    axis.text.y = element_text(size = 8),
+    axis.title.x = element_blank(),
+    axis.text.x = element_text(size = 10),
+  )
+
+# Housing Plot
+plot2 <- ggplot(
+  NonStress_Enclosure_GLMM, 
+  aes(
+    Banked.Not, 
+    NonStress.Rate)) +
+  geom_boxplot() + 
+  theme_bw() +
+  ggtitle("b. Housing Setup") + 
+  theme(
+    axis.title.y = element_blank(),
+    axis.title.x = element_blank(),
+    axis.text.x = element_text(size = 10)
+    )
+
+
+# Arrange the plots side by side with grid.arrange
+grid.arrange(plot1, plot2, ncol = 2)
+
+
+### 10.2.4 Weather vs Observation Plot ------------------------------------------------------------
+
+# Visual aid for our poct hoc Trial-num result interpretation
+
+## Proportion bar plot
+
+# Reorder the levels of Weather for stacking order
+NonStress_Enclosure_GLMM$Weather <- 
+  factor(
+    NonStress_Enclosure_GLMM$Weather, 
+    levels = c("aS", "O", "M", "R"))
+
+ggplot(
+  NonStress_Enclosure_GLMM,
+  aes(
+    x = Trial_num,
+    fill = Weather)) +
+  geom_bar(position = "fill") + # Normalizes bars to show proportions
+  labs(
+    x = "Observation", 
+    y = "Proportion", 
+    fill = "Weather") +
+  scale_fill_viridis(
+    discrete = TRUE,
+    option = "D", 
+    direction = -1,
+    labels = c("Sunny","Overcast","Mist","Rain")) +
+  scale_y_continuous(labels = scales::percent) +  # Format y-axis as percentages
+  theme_minimal()
 
 
 
@@ -1573,14 +1716,14 @@ Personality_GLM <-
 # New data frame for averages 
 MeanPers_GLM <- 
   data.frame(
-    "SCSB"=unique(Personality_GLM$SCSB), 
-    "Banked.Not"=NA, 
-    "Sex"=NA, 
-    "MeanAgg"=NA, 
-    "MeanSoc"=NA,
-    "MeanNonActivity"=NA, 
-    "MeanBold"=NA, 
-    "MeanNonStress"=NA)
+    "SCSB" = unique(Personality_GLM$SCSB), 
+    "Banked.Not" = NA, 
+    "Sex" = NA, 
+    "MeanAgg" = NA, 
+    "MeanSoc" = NA,
+    "MeanNonActivity" = NA, 
+    "MeanBold" = NA, 
+    "MeanNonStress" = NA)
 
 MeanPers_GLM$Banked.Not <- 
   Personality_GLM[
@@ -1797,7 +1940,7 @@ m2.sel_subset_TABLE$formula <- v
 ## Format
 m2.sel_subset_TABLE <- 
   m2.sel_subset_TABLE %>%
-  mutate(formula=as.character(formula)) %>%
+  mutate(formula = as.character(formula)) %>%
   as.data.frame()
 
 m2.submodel_results <- m2.sel_subset_TABLE
@@ -1848,16 +1991,15 @@ merge3 <-
 # Clean up table
 merge3
 
-merge3$df=NULL
+merge3$df = NULL
 
 merge3$Variable <- 
   c("Intercept", 
     "Housing", 
-    "Housing:Mean Non-Activity", 
-    "Mean Aggression",
-    "Mean Boldness", 
-    "Mean Non-Activity",
-    "Mean Sociability")
+    "Housing:Mean Restfulness", 
+    "Mean Restfulness",
+    "Mean Social Connectedness",
+    "Sex")
 
 ## Check
 merge3  ## Supplementary materials export
@@ -1878,7 +2020,7 @@ pred <-
   predict(
     glm.modelavg, 
     MeanPers_GLM, 
-    se.fit=TRUE, 
+    se.fit = TRUE, 
     type = "response")
 
 preddf <- 
@@ -1938,12 +2080,12 @@ ggplot(
   geom_boxplot() + 
   theme_bw() + 
   labs(
-    y = "Mean Rate of Positive Welfare-Indicating Behavior", 
+    y = "Mean Rate of Positive Welfare-Indicating Behavior (per bird, per minute)", 
     x = "Housing Setup") + 
   theme(
     axis.title = element_text(size = 10), 
-    axis.text.x = element_text(size=9), 
-    axis.text.y = element_text(size=9))
+    axis.text.x = element_text(size = 9), 
+    axis.text.y = element_text(size = 9))
 
 # More non-stress in banked housing
 
@@ -1954,22 +2096,22 @@ ggplot(
 ggplot(
   MeanPers_GLM, 
   aes(
-    x=MeanSoc, 
-    y=fit)) +
+    x = MeanSoc, 
+    y = fit)) +
   geom_smooth(
     method = "lm", 
     se = TRUE, 
-    colour="black", 
-    fill= "#D6DBDF",
+    colour = "black", 
+    fill = "#D6DBDF",
     size = .3) +
   labs(
-    x = 'Mean Rate of Social Connectedness Behavior', 
-    y = 'Mean Rate of Positive Welfare-Indicating Behavior') +
+    x = 'Mean Rate of Social Connectedness Behavior (per bird, per min)', 
+    y = 'Mean Rate of Positive Welfare-Indicating Behavior (per bird, per min)') +
   geom_point(
-    data=MeanPers_GLM,
+    data = MeanPers_GLM,
     aes(
-      x=MeanSoc, 
-      y=MeanNonStress),
+      x = MeanSoc, 
+      y = MeanNonStress),
     colour = "#566574", 
     inherit.aes = FALSE) + 
   theme_bw() + 
@@ -1985,25 +2127,25 @@ ggplot(
 ggplot(
   MeanPers_GLM, 
   aes(
-    x=MeanNonActivity, 
-    y=fit, 
-    group=Banked.Not)) +
+    x = MeanNonActivity, 
+    y = fit, 
+    group = Banked.Not)) +
   geom_smooth(
-    aes(linetype=Banked.Not), 
+    aes(linetype = Banked.Not), 
     se = TRUE, 
-    colour="black", 
-    fill= "#D6DBDF",
+    colour = "black", 
+    fill = "#D6DBDF",
     size = .3) +
   labs(
-    x = 'Mean Rate of Restful Behavior', 
-    y = 'Mean Rate of Positive Welfare-Indicating Behavior') +
+    x = 'Mean Rate of Restful Behavior (per bird, per min)', 
+    y = 'Mean Rate of Positive Welfare-Indicating Behavior (per bird, per min)') +
   geom_point(
-    data=MeanPers_GLM,
+    data = MeanPers_GLM,
     aes(
-      x=MeanNonActivity, 
-      y=MeanNonStress, 
+      x = MeanNonActivity, 
+      y = MeanNonStress, 
       shape = Banked.Not),
-    size=2, 
+    size = 2, 
     colour = "#566573", 
     inherit.aes = FALSE) + 
   theme_bw() + 
@@ -2011,3 +2153,4 @@ ggplot(
     panel.grid = element_blank(), 
     legend.position = "bottom", 
     legend.title = element_blank()) 
+
